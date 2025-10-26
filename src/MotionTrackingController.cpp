@@ -11,6 +11,8 @@ controller_interface::CallbackReturn MotionTrackingController::on_init() {
 
   try {
     auto_declare("motion.start_step", 0);
+    // number of historical observation steps to include (including current)
+    auto_declare("observation.history", 1);
   } catch (const std::exception& e) {
     RCLCPP_ERROR(get_node()->get_logger(), "Exception during init: %s", e.what());
     return CallbackReturn::ERROR;
@@ -22,7 +24,8 @@ controller_interface::CallbackReturn MotionTrackingController::on_init() {
 controller_interface::CallbackReturn MotionTrackingController::on_configure(const rclcpp_lifecycle::State& previous_state) {
   const auto policyPath = get_node()->get_parameter("policy.path").as_string();
   const auto startStep = static_cast<size_t>(get_node()->get_parameter("motion.start_step").as_int());
-
+  observationHistory_ = static_cast<size_t>(get_node()->get_parameter("observation.history").as_int());
+  printf("observation Hisotry: %zu\n", observationHistory_);
   policy_ = std::make_shared<MotionOnnxPolicy>(policyPath, startStep);
   policy_->init();
 
@@ -67,13 +70,13 @@ bool MotionTrackingController::parserObservation(const std::string& name) {
     return true;
   }
   if (name == "motion_ref_pos_b" || name == "motion_anchor_pos_b") {
-    observationManager_->addTerm(std::make_shared<MotionAnchorPosition>(commandTerm_));
+    observationManager_->addTerm(std::make_shared<MotionAnchorPosition>(commandTerm_, observationHistory_));
   } else if (name == "motion_ref_ori_b" || name == "motion_anchor_ori_b") {
-    observationManager_->addTerm(std::make_shared<MotionAnchorOrientation>(commandTerm_));
+    observationManager_->addTerm(std::make_shared<MotionAnchorOrientation>(commandTerm_, observationHistory_));
   } else if (name == "robot_body_pos") {
-    observationManager_->addTerm(std::make_shared<RobotBodyPosition>(commandTerm_));
+    observationManager_->addTerm(std::make_shared<RobotBodyPosition>(commandTerm_, observationHistory_));
   } else if (name == "robot_body_ori") {
-    observationManager_->addTerm(std::make_shared<RobotBodyOrientation>(commandTerm_));
+    observationManager_->addTerm(std::make_shared<RobotBodyOrientation>(commandTerm_, observationHistory_));
   } else {
     return false;
   }

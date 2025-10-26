@@ -22,6 +22,7 @@ class MotionTrackingController : public RlController {
 
   MotionCommandCfg cfg_;
   MotionCommandTerm::SharedPtr commandTerm_;
+  size_t observationHistory_ = 1;
 };
 
 }  // namespace legged
