@@ -74,7 +74,7 @@ Build the packages:
 ```bash
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=RelwithDebInfo --packages-up-to unitree_bringup
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=RelwithDebInfo --packages-up-to motion_tracking_controller
-source install/setup.bash
+source install/setup.zsh
 ```
 
 ## Basic Usage
